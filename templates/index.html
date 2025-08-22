@@ -1,0 +1,123 @@
+<!Doctype html>
+<html>
+    <head>
+        <title>Medical Cost Predictor</title>
+        <link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}"/>
+    </head>
+    <body>
+        <div class="container">
+            <h1 class="title">Medical Cost Prediction</h1>
+            <p class="subtitle">Enter Patient Information to get a predicted medical charge.</p>
+
+            <form id="prediction-form" class="form">
+                <div class="form-group">
+                    <label for='age'>Age</label>
+                    <input type="number" id="age" name="age" required/>
+                </div>
+
+                <div class="form-group">
+                    <label for="bmi">Bmi</label>
+                    <input type="number" id="bmi" name="bmi" step="0.01" required/>
+                </div>
+
+                <div class="form-group">
+                    <label for="children">Number of Children</label>
+                    <input type="number" id="children" name="children" required/>
+                </div>
+
+                <div class="form-group">
+                    <label for="sex">Sex</label>
+                    <select id="sex" name="sex">
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="smoker">Smoker</label>
+                    <select id="smoker" name="smoker">
+                        <option value="no">No</option>
+                        <option value="yes">Yes</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="region">Region</label>
+                    <select id="region" name="region">
+                        <option value="southeast">South East</option>
+                        <option value="southwest">South West</option>
+                        <option value="northeast">North East</option>
+                        <option value="northwest">North West</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="button">
+                    Predict Charges
+                </button>
+
+            </form>
+            <div id="result-container" class="result-container">
+                <h2 class="result-title">Predicted Charges :</h2>
+                <p id="prediction-result" class="result-value">--</p>
+                <p id="message-box" class="message-box">
+                    The Prediction is an estimate and not a medical diagnosis.
+                </p>
+            </div>
+
+            <div id="loading-spinner" class="spinner-container">
+            <svg class="spinner" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+        </div>
+
+        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded',()=>{
+                const form = document.getElementById('prediction-form')
+                const resultContainer = document.getElementById('result-container')
+                const predictionResults = document.getElementById('prediction-result')
+                const loadingSpinner = document.getElementById('loading-spinner')
+                
+                form.addEventListener('submit', async (e) =>{
+                    e.preventDefault();
+
+                    loadingSpinner.classList.add('show')
+                    resultContainer.classList.remove('show')
+
+                    const formData = new FormData(form)
+                    const data = {};
+                    formData.forEach((value,key)=>{
+                        data[key] = isNaN(value) ? value : parseFloat(value)
+                    });
+
+                    try {
+                        const response = await fetch('/predict',{
+                            method :'POST',
+                            headers : {
+                                'Content-Type' : 'application/json',
+                            },
+                            body : JSON.stringify(data)
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json()
+                            throw new Error(errorData.error || 'Prediction Failed')
+                        }
+                        const result = await response.json();
+                        predictionResults.textContent = `$${result.prediction.toFixed(2)}`;
+
+                        resultContainer.classList.add('show')
+                        loadingSpinner.classList.remove('show')
+                    } catch (error) {
+                        predictionResults.textContent = 'Error';
+                        document.getElementById('message-box').textContent = `An error has occured ${error.message}`
+                        resultContainer.classList.add('show');
+                        loadingSpinner.classList.remove('show');
+                    }
+                });
+            });
+            
+        </script>
+    </body>
+</html>
