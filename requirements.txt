@@ -5,4 +5,4 @@ seaborn
 shap
 joblib
 Flask
-sklearn
+scikit-learn
