@@ -6,3 +6,4 @@ shap
 joblib
 Flask
 scikit-learn
+gunicorn
